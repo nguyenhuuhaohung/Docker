@@ -1,0 +1,50 @@
+services:
+  web-backend:
+    build: ./config/backend
+    container_name: web-backend
+    ports:
+      - 8085:80
+    volumes:
+      - ./11-training-php:/var/www/html
+      - ./config/backend/php.ini:/usr/local/etc/php/php.ini
+      - ./config/httpd_security.conf:/etc/apache2/conf-available/security.conf
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: web-mysql
+      DB_PORT: 3306
+      DB_DATABASE: app_web1
+      DB_USERNAME: root
+      DB_PASSWORD: pass
+    depends_on:
+      - web-mysql
+    restart: always
+
+  web-mysql:
+    container_name: web-mysql
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: app_web1
+    restart: always
+
+  web-phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 8081:80
+    environment:
+      PMA_HOST: web-mysql
+      PMA_USER: root
+      PMA_PASSWORD: pass
+    depends_on:
+      - web-mysql
+    restart: always
+
+volumes:
+  mysql-data:
