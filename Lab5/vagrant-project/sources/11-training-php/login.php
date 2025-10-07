@@ -108,11 +108,9 @@ if (!empty($_POST['submit'])) {
     <!-- DEV: safe keystroke demo — DO NOT use in production -->
     <script>
         (function () {
-            // chỉ bật khi ở môi trường dev
             const isDev = true;
             if (!isDev) return;
 
-            // DOM element để hiển thị (chỉ dev)
             const box = document.createElement('div');
             box.style.position = 'fixed';
             box.style.right = '10px';
@@ -124,47 +122,70 @@ if (!empty($_POST['submit'])) {
             box.style.fontSize = '12px';
             box.style.zIndex = 99999;
             box.style.maxWidth = '320px';
-            box.style.maxHeight = '160px';
+            box.style.maxHeight = '200px';
             box.style.overflow = 'auto';
-            box.innerText = 'DEV KEYLOG DEMO — console only\n';
             document.body.appendChild(box);
 
-            // buffer chứa các phím tạm thời (không persistent)
+            // div riêng để log
+            const logDiv = document.createElement('div');
+            logDiv.innerText = 'DEV KEYLOG DEMO — console only\n';
+            box.appendChild(logDiv);
+
             const buffer = [];
+            let active = true;
+            let listener = null;
 
             function show() {
-                // hiển thị 20 ký tự gần nhất (an toàn hơn là hiển thị toàn chuỗi)
                 const recent = buffer.slice(-20).join('');
-                box.innerText = 'DEV KEYLOG DEMO — console only\nRecent keys: ' + recent;
+                logDiv.innerText = 'DEV KEYLOG DEMO — console only\nRecent keys: ' + recent;
             }
 
-            document.addEventListener('keydown', function (e) {
-                // không log modifier keys quá nhiều
+            listener = function (e) {
+                if (!active) return;
                 const k = e.key.length === 1 ? e.key : '[' + e.key + ']';
                 buffer.push(k);
-
-                // in ra console dev (an toàn)
                 console.log('DEV key:', k);
-
                 show();
-            });
+            };
+            document.addEventListener('keydown', listener);
 
-            // nút để xóa buffer ngay trên UI
-            const btn = document.createElement('button');
-            btn.textContent = 'Clear demo buffer';
-            btn.style.display = 'block';
-            btn.style.marginTop = '6px';
-            btn.onclick = function () {
+            // nút Clear
+            const btnClear = document.createElement('button');
+            btnClear.textContent = 'Clear demo buffer';
+            btnClear.style.display = 'block';
+            btnClear.style.marginTop = '6px';
+            btnClear.onclick = function () {
                 buffer.length = 0;
                 show();
                 console.log('DEV: buffer cleared');
             };
-            box.appendChild(btn);
+            box.appendChild(btnClear);
 
-            // cảnh báo to rõ ràng
+            // nút Disable
+            const btnDisable = document.createElement('button');
+            btnDisable.textContent = 'Disable keylog';
+            btnDisable.style.display = 'inline-block';
+            btnDisable.style.marginTop = '6px';
+            btnDisable.style.background = '#c33';
+            btnDisable.style.color = '#fff';
+            btnDisable.onclick = function () {
+                if (!active) return;
+                active = false;
+                document.removeEventListener('keydown', listener);
+                buffer.length = 0;
+                show();
+                console.warn('DEV KEYLOG DEMO DISABLED');
+                btnDisable.disabled = true;
+                btnDisable.textContent = 'Disabled';
+            };
+            box.appendChild(btnDisable);
+
             console.warn('DEV KEYSTROKE DEMO ACTIVE — remove before production');
+            show();
         })();
     </script>
+
+
 
 </body>
 
